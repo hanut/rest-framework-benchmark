@@ -1,0 +1,12 @@
+{
+  "name": "simple-api",
+  "module": "server.ts",
+  "devDependencies": {
+    "bun-types": "^0.5.0"
+  },
+  "type": "module",
+  "dependencies": {
+    "express": "^4.18.2",
+    "pino": "^8.11.0"
+  }
+}
