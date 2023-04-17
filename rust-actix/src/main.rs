@@ -42,7 +42,8 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::default())
             .service(web::resource("/"))
     })
-    .bind(("localhost", 3004))?
+    .workers(2)
+    .bind(("localhost", 3000))?
     .run()
     .await
 }

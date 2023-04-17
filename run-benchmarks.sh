@@ -2,125 +2,152 @@
 
 mkdir -p results
 
-# Bun benchmarks
-BenchmarkBun() {
-  echo "Running Bun + Express benchmarks"
-  rm  -f ./results/bun-100k-result.txt ./results/bun-1m-result.txt
-  echo "starting server..."
-  bun ./bun/server.ts & server_pid=$!
+NUM_WORKERS=5
+
+# Get framework text label from framework shortcode
+FLabel() {
+  case $1 in
+  bun)
+    echo "Bun + Express"
+    ;;
+  node)
+    echo "Node + Express" 
+    ;;
+  neste)
+    echo "Nest + Express"
+    ;;
+  nestf)
+    echo "Nest + Fastify"
+    ;;
+  go)
+    echo "Go + Fiber"
+    ;;
+  cpp)
+    echo "Cpp & Oat++"
+    ;;
+  rust)
+    echo "Rust + Actix"
+    ;;
+  *)
+    echo "INVALID FRAMEWORK > $1"
+    exit
+    ;;
+  esac
+}
+
+# Benchmark Function
+Benchmark() {
+  local framework="$1"
+  local flabel=$(FLabel $1)
+  echo "Running $flabel benchmark"
+  rm  -f ./results/$framework-10k.txt ./results/$framework-100k.txt ./results/$framework-1m.txt
+  echo "starting $framework server..."
+  case $1 in
+  bun)
+    StartBun
+    ;;
+  node)
+    StartNode 
+    ;;
+  neste)
+    StartNestExpress
+    ;;
+  nestf)
+    StartNestFastify
+    ;;
+  go)
+    StartGo
+    ;;
+  cpp)
+    StartCpp
+    ;;
+  rust)
+    StartRust
+    ;;
+
+  *)
+    exit
+    ;;
+  esac
   while ! curl http://localhost:3000 &> /dev/null; do
+    echo "waiting for $flabel to start..."
     sleep 1
   done
-  sleep 2
-  ab -k -n 100000 -c 100 -q -g ./results/bun-100k-result.txt  -p test_payload.json -T application/json http://localhost:3000/ >./results/bun-100k-result.txt 2>&1
-  sleep 5
-  ab -k -n 1000000 -c 100 -q -g ./results/bun-1m-result.txt  -p test_payload.json -T application/json http://localhost:3000/ >./results/bun-1m-result.txt 2>&1
+  echo "$flabel started !"
+  sleep 1
+  echo "10k requests with $NUM_WORKERS workers"
+  ab -k -n 10000 -c $NUM_WORKERS -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-10k.txt
+  sleep 3
+  echo "100k requests with $NUM_WORKERS workers"
+  ab -k -n 100000 -c $NUM_WORKERS*2 -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-100k.txt
+  sleep 3
+  echo "1m requests with $NUM_WORKERS workers"
+  ab -k -n 1000000 -c $NUM_WORKERS*3 -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-1m.txt
   echo "stopping server..."
   fuser -k 3000/tcp
+}
+
+
+
+# Bun benchmarks
+StartBun() {
+  bun ./bun/server.ts > /dev/null & server_pid=$!
 }
 
 # node benchmarks
-BenchmarkNode() {
-  echo "Running Node + Express benchmarks"
-  rm -f ./results/node-100k-result.txt ./results/node-1m-result.txt
-  echo "starting server..."
+StartNode() {
   cd ./node && npm run build
-  node . & server_pid=$!
+  node . > /dev/null & server_pid=$!
   cd ..
-  while ! curl http://localhost:3001 &> /dev/null; do
-    sleep 1
-  done
-  ab -k -n 100000 -c 100 -q -g ./results/node-100k-result.txt  -p test_payload.json -T application/json http://localhost:3001/ >./results/node-100k-result.txt 2>&1 
-  sleep 5
-  ab -k -n 1000000 -c 100 -q -g ./results/node-1m-result.txt  -p test_payload.json -T application/json http://localhost:3001/ >./results/node-1m-result.txt 2>&1 
-  echo "stopping server..."
-  fuser -k 3001/tcp
 }
 
 # Nest+Express benchmarks
-BenchmarkNestExpress() {
-  echo "Running Nestjs + Express benchmarks"
-  rm -f ./results/nest-express-100k-result.txt ./results/nest-express-1m-result.txt
-  echo "building server..."
+StartNestExpress() {
   cd ./nest-express && npm run build
-  echo "starting server..."
-  node ./dist/main.js & server_pid=$!
+  node ./dist/main.js > /dev/null & server_pid=$!
   cd ..
-  while ! curl http://localhost:3000 &> /dev/null; do
-    sleep 1
-  done
-  ab -k -n 100000 -c 100 -q -g ./results/nest-express-100k-result.txt  -p test_payload.json -T application/json http://localhost:3000/ >./results/nest-express-100k-result.txt 2>&1 
-  sleep 5
-  ab -k -n 1000000 -c 100 -q -g ./results/nest-express-1m-result.txt  -p test_payload.json -T application/json http://localhost:3000/ >./results/nest-express-1m-result.txt 2>&1 
-  echo "stopping server..."
-  fuser -k 3000/tcp
 }
 
+# Nest+Fastify benchmarks
+StartNestFastify() {
+  cd ./nest-fastify && npm run build
+  node ./dist/main.js > /dev/null & server_pid=$!
+  cd ..
+}
 
 # go-fiber benchmarks
-BenchmarkGo() {
-  echo "Running Go + Fiber benchmarks"
-  rm -f ./results/gofiber-100k-result.txt ./results/gofiber-1m-result.txt
-  echo "starting server..."
+StartGo() {
   cd ./go-fiber
-  go run main.go & server_pid=$!
+  go run main.go > /dev/null & server_pid=$!
   cd ..
-  while ! curl http://localhost:3002 &> /dev/null; do
-    sleep 1
-  done
-  ab -k -n 100000 -c 100 -q -g ./results/gofiber-100k-result.txt  -p test_payload.json -T application/json http://localhost:3002/ > ./results/gofiber-100k-result.txt 2>&1
-  sleep 5
-  ab -k -n 1000000 -c 100 -q -g ./results/gofiber-1m-result.txt  -p test_payload.json -T application/json http://localhost:3002/ > ./results/gofiber-1m-result.txt 2>&1
-  echo "stopping server..."
-  fuser -k 3002/tcp
 }
 
 # oat++ benchmarks
-BenchmarkCpp() {
-  echo "Running Oat++ benchmarks"
-  rm -f ./results/cppoat-100k-result.txt ./results/cppoat-1m-result.txt
-  echo "starting server..."
+StartCpp() {
   cd ./cpp-oat
   mkdir -p build
   cd ./build && cmake .. && make
-  ./simple-http & server_pid=$!
+  ./simple-http > /dev/null & server_pid=$!
   cd ../../
-  while ! curl http://localhost:3003 &> /dev/null; do
-    sleep 1
-  done
-  ab -k -n 100000 -c 100 -q -g ./results/cppoat-100k-result.txt  -p test_payload.json -T application/json http://localhost:3003/ > ./results/cppoat-100k-result.txt 2>&1
-  sleep 5
-  ab -k -n 1000000 -c 100 -q -g ./results/cppoat-1m-result.txt  -p test_payload.json -T application/json http://localhost:3003/ > ./results/cppoat-1m-result.txt 2>&1
-  echo "stopping server..."
-  fuser -k 3003/tcp
 }
 
 # rust+actix benchmarks
-BenchmarkRust() {
-  echo "Running Rust + Actix benchmarks"
-  rm -f ./results/actix-100k-result.txt ./results/actix-1m-result.txt
-  echo "starting server..."
+StartRust() {
   cd ./rust-actix
-  cargo run & server_pid=$!
+  cargo run > /dev/null & server_pid=$!
   cd ..
-  while ! curl http://localhost:3004 &> /dev/null; do
-    sleep 1
-  done
-  ab -k -n 100000 -c 100 -q -g ./results/actix-100k-result.txt  -p test_payload.json -T application/json http://localhost:3004/ > ./results/actix-100k-result.txt 2>&1
-  sleep 5
-  ab -k -n 1000000 -c 100 -q -g ./results/actix-1m-result.txt  -p test_payload.json -T application/json http://localhost:3004/ > ./results/actix-1m-result.txt 2>&1
-  echo "stopping server..."
-  fuser -k 3004/tcp
 }
 
-# BenchmarkBun
-# sleep 5
-# BenchmarkNode
-# sleep 5
-BenchmarkNestExpress
-# sleep 5
-# BenchmarkGo
-# sleep 5
-# BenchmarkCpp
-# sleep 5
-# BenchmarkRust
+Benchmark bun
+sleep 5
+Benchmark node
+sleep 5
+Benchmark neste
+sleep 5
+Benchmark nestf
+sleep 5
+Benchmark go
+sleep 5
+Benchmark cpp
+sleep 5
+Benchmark rust

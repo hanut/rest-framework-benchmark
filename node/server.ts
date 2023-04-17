@@ -27,6 +27,6 @@ app.post(`/`, async (req, res) => {
   res.json({ username: "hanut", role: "super admin" });
 });
 
-const server = app.listen(3001, () =>
-  console.log(`Node Server ready at: http://localhost:3001`)
+const server = app.listen(3000, () =>
+  console.log(`Node Server ready at: http://localhost:3000`)
 );

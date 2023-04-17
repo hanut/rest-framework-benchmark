@@ -44,5 +44,5 @@ func main() {
 		return c.Status(200).JSON(resData)
 	})
 
-	app.Listen("localhost:3002")
+	app.Listen("localhost:3000")
 }
