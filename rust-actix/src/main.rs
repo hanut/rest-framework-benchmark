@@ -23,7 +23,7 @@ async fn login(data: web::Json<LoginReqDto>) -> Result<HttpResponse, Error> {
         return Err(ErrorUnauthorized("Unauthorized"));
     }
     let res_data = LoginResDto {
-        username: String::from("asdasd"),
+        username: String::from("hanut"),
         role: String::from("super admin"),
     };
     Ok(HttpResponse::Ok().json(res_data))
@@ -37,13 +37,12 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap_fn(|req, srv| {
                 println!("{} {} {}", timestamp(), req.method(), req.path());
-                srv.call(req)
+                return srv.call(req);
             })
             .wrap(middleware::Logger::default())
-            .service(web::resource("/"))
+            .service(login)
     })
-    .workers(2)
-    .bind(("localhost", 3000))?
+    .bind(("127.0.0.1", 3000))?
     .run()
     .await
 }
