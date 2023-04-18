@@ -27,7 +27,7 @@ public:
   ENDPOINT("POST", "/", login, BODY_DTO(Object<LoginReqDto>, loginDto)) {
     std::time_t result = std::time(nullptr);
     std::cout << std::asctime(std::localtime(&result)) << " POST / \n";
-    if (loginDto->email != "hanutsingh@gmail.com" || loginDto->password != "qwasd@123") {
+    if (loginDto->email != "hanutsingh@gmail.com" || loginDto->password != "qweasd@123") {
       auto errDto = ErrorDto::createShared();
       errDto->statusCode = 401;
       errDto->statusText = "Unauthorized";

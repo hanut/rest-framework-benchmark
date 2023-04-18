@@ -3,6 +3,7 @@
 mkdir -p results
 
 NUM_WORKERS=5
+WAIT_BETWEEN_TESTS=5
 
 # Get framework text label from framework shortcode
 FLabel() {
@@ -75,14 +76,14 @@ Benchmark() {
   done
   echo "$flabel started !"
   sleep 1
-  echo "10k requests with $NUM_WORKERS workers"
-  ab -k -n 10000 -c $NUM_WORKERS -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-10k.txt
-  sleep 3
+  # echo "10k requests with $NUM_WORKERS workers"
+  # ab -k -n 10000 -c $NUM_WORKERS -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-10k.txt
+  # sleep 3
   echo "100k requests with $NUM_WORKERS workers"
   ab -k -n 100000 -c $NUM_WORKERS*2 -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-100k.txt
-  sleep 3
-  echo "1m requests with $NUM_WORKERS workers"
-  ab -k -n 1000000 -c $NUM_WORKERS*3 -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-1m.txt
+  # sleep 3
+  # echo "1m requests with $NUM_WORKERS workers"
+  # ab -k -n 1000000 -c $NUM_WORKERS*3 -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-1m.txt
   echo "stopping server..."
   fuser -k 3000/tcp
 }
@@ -139,15 +140,15 @@ StartRust() {
 }
 
 Benchmark bun
-sleep 5
+sleep $WAIT_BETWEEN_TESTS
 Benchmark node
-sleep 5
+sleep $WAIT_BETWEEN_TESTS
 Benchmark neste
-sleep 5
+sleep $WAIT_BETWEEN_TESTS
 Benchmark nestf
-sleep 5
+sleep $WAIT_BETWEEN_TESTS
 Benchmark go
-sleep 5
+sleep $WAIT_BETWEEN_TESTS
 Benchmark cpp
-sleep 5
+sleep $WAIT_BETWEEN_TESTS
 Benchmark rust
