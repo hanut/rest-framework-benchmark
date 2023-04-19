@@ -171,19 +171,21 @@ StartRust() {
 }
 
 declare -a Frameworks=(
-  "bune"
-  "denoe"
-  "denoo"
-  "nodex"
-  "nodef"
-  "neste"
-  "nestf"
+  # "bune"
+  # "denoe"
+  # "denoo"
+  # "nodex"
+  # "nodef"
+  # "neste"
+  # "nestf"
   "go"
-  "cpp"
-  "rust"
+  # "cpp"
+  # "rust"
 )
 
 for fw in ${Frameworks[@]}; do
   Benchmark $fw
   sleep $WAIT_BETWEEN_TESTS
 done
+
+./process

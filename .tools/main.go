@@ -43,7 +43,7 @@ func main() {
 	if files == nil {
 		panic("No files found")
 	}
-	results := make(AbStatsReport, len(files), len(files))
+	results := make(AbStatsReport, len(files))
 	for i, file := range files {
 		fc, err := os.ReadFile(file)
 		if err != nil {
@@ -51,7 +51,8 @@ func main() {
 		}
 		results[i] = extractStats(string(fc))
 		fnp := strings.Split(strings.Trim(file, ".txt"), "-")
-		results[i].Framework = getLabel(fnp[0][8:])
+		results[i].Framework = getLabel(fnp[0][9:])
+		// fmt.Println("File", file, "Framework", results[i].Framework)
 		results[i].Load = fnp[1]
 	}
 	cwd, _ := os.Getwd()
@@ -59,7 +60,7 @@ func main() {
 }
 
 func getFilesList() []string {
-	pattern := "results/*.txt*"
+	pattern := "../results/*.txt*"
 	matches, _ := filepath.Glob(pattern)
 	return matches
 }
@@ -90,10 +91,16 @@ func extractStats(contents string) AbStats {
 func getLabel(framework string) string {
 	var label string
 	switch framework {
-	case "bun":
+	case "bune":
 		label = "Bun + Express"
-	case "node":
+	case "denoe":
+		label = "Deno + Express"
+	case "denoo":
+		label = "Deno + Oak"
+	case "nodex":
 		label = "Node + Express"
+	case "nodef":
+		label = "Node + Fastify"
 	case "neste":
 		label = "Nest + Express"
 	case "nestf":
