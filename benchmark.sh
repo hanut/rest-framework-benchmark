@@ -96,12 +96,12 @@ Benchmark() {
   sleep 1
   echo "10k requests with $NUM_WORKERS workers"
   ab -k -n 10000 -c $NUM_WORKERS -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-10k.txt
-  # sleep 3
-  # echo "100k requests with $NUM_WORKERS workers"
-  # ab -k -n 100000 -c $NUM_WORKERS*2 -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-100k.txt
-  # sleep 3
-  # echo "1m requests with $NUM_WORKERS workers"
-  # ab -k -n 1000000 -c $NUM_WORKERS*3 -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-1m.txt
+  sleep 3
+  echo "100k requests with $NUM_WORKERS workers"
+  ab -k -n 100000 -c $NUM_WORKERS*2 -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-100k.txt
+  sleep 3
+  echo "1m requests with $NUM_WORKERS workers"
+  ab -k -n 1000000 -c $NUM_WORKERS*3 -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-1m.txt
   echo "stopping server..."
   fuser -k 3000/tcp
 }
@@ -171,16 +171,16 @@ StartRust() {
 }
 
 declare -a Frameworks=(
-  # "bune"
-  # "denoe"
-  # "denoo"
-  # "nodex"
-  # "nodef"
-  # "neste"
-  # "nestf"
+  "bune"
+  "denoe"
+  "denoo"
+  "nodex"
+  "nodef"
+  "neste"
+  "nestf"
   "go"
-  # "cpp"
-  # "rust"
+  "cpp"
+  "rust"
 )
 
 for fw in ${Frameworks[@]}; do

@@ -51,7 +51,7 @@ func main() {
 		}
 		results[i] = extractStats(string(fc))
 		fnp := strings.Split(strings.Trim(file, ".txt"), "-")
-		results[i].Framework = getLabel(fnp[0][9:])
+		results[i].Framework = getLabel(fnp[0][8:])
 		// fmt.Println("File", file, "Framework", results[i].Framework)
 		results[i].Load = fnp[1]
 	}
@@ -60,7 +60,7 @@ func main() {
 }
 
 func getFilesList() []string {
-	pattern := "../results/*.txt*"
+	pattern := "./results/*.txt*"
 	matches, _ := filepath.Glob(pattern)
 	return matches
 }
