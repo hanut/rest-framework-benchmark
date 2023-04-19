@@ -2,17 +2,26 @@
 
 mkdir -p results
 
-NUM_WORKERS=5
-WAIT_BETWEEN_TESTS=5
+NUM_WORKERS=10
+WAIT_BETWEEN_TESTS=3
 
 # Get framework text label from framework shortcode
 FLabel() {
   case $1 in
-  bun)
+  bune)
     echo "Bun + Express"
     ;;
-  node)
+  denoe)
+    echo "Deno + Express"
+    ;;
+  denoo)
+    echo "Deno + Oak"
+    ;;
+  nodex)
     echo "Node + Express" 
+    ;;
+  nodef)
+    echo "Node + Fastify" 
     ;;
   neste)
     echo "Nest + Express"
@@ -44,11 +53,20 @@ Benchmark() {
   rm  -f ./results/$framework-10k.txt ./results/$framework-100k.txt ./results/$framework-1m.txt
   echo "starting $framework server..."
   case $1 in
-  bun)
-    StartBun
+  bune)
+    StartBunExpress
     ;;
-  node)
-    StartNode 
+  denoe)
+    StartDenoExpress
+    ;;
+  denoo)
+    StartDenoOak
+    ;;
+  nodex)
+    StartNodeExpress 
+    ;;
+  nodef)
+    StartNodeFastify 
     ;;
   neste)
     StartNestExpress
@@ -76,11 +94,11 @@ Benchmark() {
   done
   echo "$flabel started !"
   sleep 1
-  # echo "10k requests with $NUM_WORKERS workers"
-  # ab -k -n 10000 -c $NUM_WORKERS -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-10k.txt
+  echo "10k requests with $NUM_WORKERS workers"
+  ab -k -n 10000 -c $NUM_WORKERS -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-10k.txt
   # sleep 3
-  echo "100k requests with $NUM_WORKERS workers"
-  ab -k -n 100000 -c $NUM_WORKERS*2 -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-100k.txt
+  # echo "100k requests with $NUM_WORKERS workers"
+  # ab -k -n 100000 -c $NUM_WORKERS*2 -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-100k.txt
   # sleep 3
   # echo "1m requests with $NUM_WORKERS workers"
   # ab -k -n 1000000 -c $NUM_WORKERS*3 -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-1m.txt
@@ -91,13 +109,26 @@ Benchmark() {
 
 
 # Bun benchmarks
-StartBun() {
-  bun ./bun/server.ts > /dev/null & server_pid=$!
+StartBunExpress() {
+  bun ./bun-express/server.ts > /dev/null & server_pid=$!
 }
 
-# node benchmarks
-StartNode() {
-  cd ./node && npm run build
+StartDenoExpress() {
+  deno run -A ./deno-express/main.ts > /dev/null & server_pid=$!
+}
+StartDenoOak() {
+  deno run -A ./deno-oak/main.ts > /dev/null & server_pid=$!
+}
+
+# node express benchmarks
+StartNodeExpress() {
+  cd ./node-express && npm run build
+  node . > /dev/null & server_pid=$!
+  cd ..
+}
+# node fastify benchmarks
+StartNodeFastify() {
+  cd ./node-fastify && npm run build
   node . > /dev/null & server_pid=$!
   cd ..
 }
@@ -139,16 +170,20 @@ StartRust() {
   cd ..
 }
 
-Benchmark bun
-sleep $WAIT_BETWEEN_TESTS
-Benchmark node
-sleep $WAIT_BETWEEN_TESTS
-Benchmark neste
-sleep $WAIT_BETWEEN_TESTS
-Benchmark nestf
-sleep $WAIT_BETWEEN_TESTS
-Benchmark go
-sleep $WAIT_BETWEEN_TESTS
-Benchmark cpp
-sleep $WAIT_BETWEEN_TESTS
-Benchmark rust
+declare -a Frameworks=(
+  "bune"
+  "denoe"
+  "denoo"
+  "nodex"
+  "nodef"
+  "neste"
+  "nestf"
+  "go"
+  "cpp"
+  "rust"
+)
+
+for fw in ${Frameworks[@]}; do
+  Benchmark $fw
+  sleep $WAIT_BETWEEN_TESTS
+done

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 )
@@ -27,22 +28,34 @@ func (ab AbStats) String() string {
 }`, ab.Framework, ab.Load, ab.TimeTaken, ab.TransferRate, ab.Mtpr, ab.Rps)
 }
 
+type AbStatsReport = []AbStats
+
+func writeToCsv(abr AbStatsReport, path string) {
+	var csv string
+	for _, v := range abr {
+		csv += fmt.Sprintf("%s,%s,%s,%s,%s,%s\r\n", v.Framework, v.Load, v.TimeTaken, v.TransferRate, v.Mtpr, v.Rps)
+	}
+	os.WriteFile(path, []byte(csv), 0700)
+}
+
 func main() {
 	files := getFilesList()
 	if files == nil {
 		panic("No files found")
 	}
-	for _, file := range files {
+	results := make(AbStatsReport, len(files), len(files))
+	for i, file := range files {
 		fc, err := os.ReadFile(file)
 		if err != nil {
 			panic(err)
 		}
-		stats := extractStats(string(fc))
+		results[i] = extractStats(string(fc))
 		fnp := strings.Split(strings.Trim(file, ".txt"), "-")
-		stats.Framework = fnp[0]
-		stats.Load = fnp[1]
-		fmt.Println(stats)
+		results[i].Framework = getLabel(fnp[0][8:])
+		results[i].Load = fnp[1]
 	}
+	cwd, _ := os.Getwd()
+	writeToCsv(results, path.Join(cwd, "result.csv"))
 }
 
 func getFilesList() []string {
@@ -72,4 +85,25 @@ func extractStats(contents string) AbStats {
 		}
 	}
 	return stats
+}
+
+func getLabel(framework string) string {
+	var label string
+	switch framework {
+	case "bun":
+		label = "Bun + Express"
+	case "node":
+		label = "Node + Express"
+	case "neste":
+		label = "Nest + Express"
+	case "nestf":
+		label = "Nest + Fastify"
+	case "go":
+		label = "Go + Fiber"
+	case "cpp":
+		label = "Cpp & Oat++"
+	case "rust":
+		label = "Rust + Actix"
+	}
+	return label
 }
