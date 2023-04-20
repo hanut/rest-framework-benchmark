@@ -11,6 +11,9 @@ FLabel() {
   bune)
     echo "Bun + Express"
     ;;
+  bunh)
+    echo "Bun + Hono"
+    ;;
   denoe)
     echo "Deno + Express"
     ;;
@@ -38,6 +41,9 @@ FLabel() {
   rust)
     echo "Rust + Actix"
     ;;
+  javasp)
+    echo "Java + Springboot"
+    ;;
   *)
     echo "INVALID FRAMEWORK > $1"
     exit
@@ -55,6 +61,9 @@ Benchmark() {
   case $1 in
   bune)
     StartBunExpress
+    ;;
+  bunh)
+    StartBunHono
     ;;
   denoe)
     StartDenoExpress
@@ -83,7 +92,9 @@ Benchmark() {
   rust)
     StartRust
     ;;
-
+  javasp)
+    StartJavaSpring
+    ;;
   *)
     exit
     ;;
@@ -94,28 +105,36 @@ Benchmark() {
   done
   echo "$flabel started !"
   sleep 1
-  echo "10k requests with $NUM_WORKERS workers"
-  ab -k -n 10000 -c $NUM_WORKERS -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-10k.txt
+  local wrkrs=$NUM_WORKERS
+  echo "10k requests with $wrkrs workers"
+  ab -k -n 10000 -c $wrkrs -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-10k.txt
   sleep 3
-  echo "100k requests with $NUM_WORKERS workers"
-  ab -k -n 100000 -c $NUM_WORKERS*2 -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-100k.txt
+  local wrkrs=$NUM_WORKERS*2
+  echo "100k requests with $wrkrs workers"
+  ab -k -n 100000 -c $wrkrs -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-100k.txt
   sleep 3
-  echo "1m requests with $NUM_WORKERS workers"
-  ab -k -n 1000000 -c $NUM_WORKERS*3 -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-1m.txt
+  local wrkrs=$NUM_WORKERS*3
+  echo "1m requests with $wrkrs workers"
+  ab -k -n 1000000 -c $wrkrs -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-1m.txt
   echo "stopping server..."
   fuser -k 3000/tcp
 }
 
 
 
-# Bun benchmarks
+# Bun Express benchmarks
 StartBunExpress() {
   bun ./bun-express/server.ts > /dev/null & server_pid=$!
 }
-
+# Bun Hono benchmarks
+StartBunHono() {
+  bun ./bun-hono/server.ts > /dev/null & server_pid=$!
+}
+# Deno Express benchmarks
 StartDenoExpress() {
   deno run -A ./deno-express/main.ts > /dev/null & server_pid=$!
 }
+# Deno Oak benchmarks
 StartDenoOak() {
   deno run -A ./deno-oak/main.ts > /dev/null & server_pid=$!
 }
@@ -150,7 +169,8 @@ StartNestFastify() {
 # go-fiber benchmarks
 StartGo() {
   cd ./go-fiber
-  go run main.go > /dev/null & server_pid=$!
+  go build -o go-fiber main.go
+  ./go-fiber > /dev/null & server_pid=$!
   cd ..
 }
 
@@ -166,21 +186,30 @@ StartCpp() {
 # rust+actix benchmarks
 StartRust() {
   cd ./rust-actix
-  cargo run > /dev/null & server_pid=$!
+  cargo build -r
+  ./target/release/rust-actix > /dev/null & server_pid=$!
+  cd ..
+}
+
+# rust+actix benchmarks
+StartJavaSpring() {
+  cd ./java-spring
+   > /dev/null & server_pid=$!
   cd ..
 }
 
 declare -a Frameworks=(
-  "bune"
-  "denoe"
-  "denoo"
-  "nodex"
-  "nodef"
-  "neste"
-  "nestf"
+  # "bune"
+  # "denoe"
+  # "denoo"
+  # "nodex"
+  # "nodef"
+  # "neste"
+  # "nestf"
   "go"
-  "cpp"
-  "rust"
+  # "cpp"
+  # "rust"
+  # "javasp"
 )
 
 for fw in ${Frameworks[@]}; do

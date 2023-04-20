@@ -31,7 +31,7 @@ func (ab AbStats) String() string {
 type AbStatsReport = []AbStats
 
 func writeToCsv(abr AbStatsReport, path string) {
-	var csv string
+	var csv string = "Framework,Load,Time Taken(s),Transfer Rate(KB/s),Mean Time Per Request(ms),Average Throughput(Req/s)\n"
 	for _, v := range abr {
 		csv += fmt.Sprintf("%s,%s,%s,%s,%s,%s\r\n", v.Framework, v.Load, v.TimeTaken, v.TransferRate, v.Mtpr, v.Rps)
 	}
@@ -76,13 +76,13 @@ func extractStats(contents string) AbStats {
 	for idx, line := range lines {
 		switch idx {
 		case 0:
-			stats.TimeTaken = strings.Trim(strings.Trim(strings.Trim(line, "Time taken for tests:"), "second"), " ")
+			stats.TimeTaken = "00:00:" + strings.Trim(strings.Trim(strings.Trim(line, "Time taken for tests:"), "second"), " ")
 		case 7:
 			stats.Rps = strings.Trim(strings.Trim(strings.Trim(line, "Requests per second:"), "[#/sec] (mean)"), " ")
 		case 8:
 			stats.Mtpr = strings.Trim(strings.Trim(strings.Trim(line, "Time per request:"), "[ms] (mean)"), " ")
-		case 11:
-			stats.TransferRate = strings.Trim(strings.Trim(line, "kb/s sent"), " ")
+		case 12:
+			stats.TransferRate = strings.Trim(strings.Split(line, "kb/s")[0], " ")
 		}
 	}
 	return stats
