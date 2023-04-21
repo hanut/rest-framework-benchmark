@@ -91,7 +91,7 @@ Benchmark() {
     
     echo "$rc requests with $wrkrs workers (results dumped at $filename)"
     # rm  -f ./results/$framework-$rc.txt
-    ab -k -n $rc -c $wrkrs -q -p test_payload.json -T application/json http://localhost:3000/ >$filename
+    ab -s 120 -n $rc -c $wrkrs -q -p test_payload.json -T application/json http://localhost:3000/ >$filename
     printf "\nTest Label:$flabel\nTest Load:$rc\n">>$filename
     sleep 3
   done
@@ -107,7 +107,7 @@ StartBunExpress() {
 }
 # Bun Hono benchmarks
 StartBunHono() {
-  bun ./bun-hono/server.ts > /dev/null & server_pid=$!
+  bun ./bun-hono/src/index.ts > /dev/null & server_pid=$!
 }
 # Deno Express benchmarks
 StartDenoExpress() {
@@ -183,6 +183,7 @@ StartJavaSpring() {
 # which order
 declare -a Frameworks=(
   # "bune"
+  bunh
   # "denoe"
   # "denoo"
   # "nodex"
@@ -192,7 +193,7 @@ declare -a Frameworks=(
   # "go"
   # "cpp"
   # "rust"
-  "javasp"
+  # "javasp"
 )
 let order=1 
 for fw in ${Frameworks[@]}; do
