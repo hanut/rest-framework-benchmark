@@ -50,10 +50,6 @@ func main() {
 			panic(err)
 		}
 		results[i] = extractStats(string(fc))
-		fnp := strings.Split(strings.Trim(file, ".txt"), "-")
-		results[i].Framework = getLabel(fnp[0][8:])
-		// fmt.Println("File", file, "Framework", results[i].Framework)
-		results[i].Load = fnp[1]
 	}
 	cwd, _ := os.Getwd()
 	writeToCsv(results, path.Join(cwd, "result.csv"))
@@ -73,6 +69,9 @@ func extractStats(contents string) AbStats {
 		Rps:          "",
 		Mtpr:         "",
 	}
+	// stores the index to the 3rd last line since we know that is
+	// going to be our benchmark test data
+	tdIdx := len(lines) - 3
 	for idx, line := range lines {
 		switch idx {
 		case 0:
@@ -83,34 +82,11 @@ func extractStats(contents string) AbStats {
 			stats.Mtpr = strings.Trim(strings.Trim(strings.Trim(line, "Time per request:"), "[ms] (mean)"), " ")
 		case 12:
 			stats.TransferRate = strings.Trim(strings.Split(line, "kb/s")[0], " ")
+		case tdIdx:
+			stats.Framework = strings.Split(line, ":")[1]
+		case tdIdx + 1:
+			stats.Load = strings.Split(line, ":")[1]
 		}
 	}
 	return stats
-}
-
-func getLabel(framework string) string {
-	var label string
-	switch framework {
-	case "bune":
-		label = "Bun + Express"
-	case "denoe":
-		label = "Deno + Express"
-	case "denoo":
-		label = "Deno + Oak"
-	case "nodex":
-		label = "Node + Express"
-	case "nodef":
-		label = "Node + Fastify"
-	case "neste":
-		label = "Nest + Express"
-	case "nestf":
-		label = "Nest + Fastify"
-	case "go":
-		label = "Go + Fiber"
-	case "cpp":
-		label = "Cpp & Oat++"
-	case "rust":
-		label = "Rust + Actix"
-	}
-	return label
 }

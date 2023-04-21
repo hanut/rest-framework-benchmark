@@ -5,117 +5,96 @@ mkdir -p results
 NUM_WORKERS=10
 WAIT_BETWEEN_TESTS=3
 
-# Get framework text label from framework shortcode
-FLabel() {
+# Benchmark Function
+# The first parameter $1 has the framework tag like go, rust, bune etc
+# The second parameter $2 has the order of output for the report
+Benchmark() {
+  local framework="$1"
+  local flabel=""
+  printf -v order "%05d" $2 # Store the order of the report
+
   case $1 in
   bune)
-    echo "Bun + Express"
+    flabel="Bun + Express"
+    StartBunExpress
     ;;
   bunh)
-    echo "Bun + Hono"
+    flabel="Bun + Hono"
+    StartBunHono
     ;;
   denoe)
-    echo "Deno + Express"
+    flabel="Deno + Express"
+    StartDenoExpress
     ;;
   denoo)
-    echo "Deno + Oak"
+    flabel="Deno + Oak"
+    StartDenoOak
     ;;
   nodex)
-    echo "Node + Express" 
+    flabel="Node + Express" 
+    StartNodeExpress 
     ;;
   nodef)
-    echo "Node + Fastify" 
+    flabel="Node + Fastify" 
+    StartNodeFastify 
     ;;
   neste)
-    echo "Nest + Express"
+    flabel="Nest + Express"
+    StartNestExpress
     ;;
   nestf)
-    echo "Nest + Fastify"
+    flabel="Nest + Fastify"
+    StartNestFastify
     ;;
   go)
-    echo "Go + Fiber"
+    flabel="Go + Fiber"
+    StartGo
     ;;
   cpp)
-    echo "Cpp & Oat++"
+    flabel="Cpp & Oat++"
+    StartCpp
     ;;
   rust)
-    echo "Rust + Actix"
+    flabel="Rust + Actix"
+    StartRust
     ;;
   javasp)
-    echo "Java + Springboot"
+    flabel="Java + Springboot"
+    StartJavaSpring
     ;;
   *)
     echo "INVALID FRAMEWORK > $1"
     exit
     ;;
   esac
-}
-
-# Benchmark Function
-Benchmark() {
-  local framework="$1"
-  local flabel=$(FLabel $1)
-  echo "Running $flabel benchmark"
-  rm  -f ./results/$framework-10k.txt ./results/$framework-100k.txt ./results/$framework-1m.txt
-  echo "starting $framework server..."
-  case $1 in
-  bune)
-    StartBunExpress
-    ;;
-  bunh)
-    StartBunHono
-    ;;
-  denoe)
-    StartDenoExpress
-    ;;
-  denoo)
-    StartDenoOak
-    ;;
-  nodex)
-    StartNodeExpress 
-    ;;
-  nodef)
-    StartNodeFastify 
-    ;;
-  neste)
-    StartNestExpress
-    ;;
-  nestf)
-    StartNestFastify
-    ;;
-  go)
-    StartGo
-    ;;
-  cpp)
-    StartCpp
-    ;;
-  rust)
-    StartRust
-    ;;
-  javasp)
-    StartJavaSpring
-    ;;
-  *)
-    exit
-    ;;
-  esac
+  echo "$2. Running $flabel benchmark"
+  let maxWait=10
   while ! curl http://localhost:3000 &> /dev/null; do
+    if [ $maxWait -le 0 ]
+    then
+      echo $flabel server timed out
+      exit 1
+    fi
     echo "waiting for $flabel to start..."
     sleep 1
+    let maxWait=maxWait-1
   done
-  echo "$flabel started !"
+  echo "$flabel service started !"
+  
   sleep 1
-  local wrkrs=$NUM_WORKERS
-  echo "10k requests with $wrkrs workers"
-  ab -k -n 10000 -c $wrkrs -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-10k.txt
-  sleep 3
-  local wrkrs=$NUM_WORKERS*2
-  echo "100k requests with $wrkrs workers"
-  ab -k -n 100000 -c $wrkrs -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-100k.txt
-  sleep 3
-  local wrkrs=$NUM_WORKERS*3
-  echo "1m requests with $wrkrs workers"
-  ab -k -n 1000000 -c $wrkrs -q -p test_payload.json -T application/json http://localhost:3000/ >./results/$framework-1m.txt
+
+  for (( c=1; c<=3; c++ ))
+  do 
+    local wrkrs=$((NUM_WORKERS*c))
+    local rc=$((1000*(10**c)))
+    local filename=./results/$order_$framework-$rc.txt
+    
+    echo "$rc requests with $wrkrs workers (results dumped at $filename)"
+    # rm  -f ./results/$framework-$rc.txt
+    ab -k -n $rc -c $wrkrs -q -p test_payload.json -T application/json http://localhost:3000/ >$filename
+    printf "\nTest Label:$flabel\nTest Load:$rc\n">>$filename
+    sleep 3
+  done
   echo "stopping server..."
   fuser -k 3000/tcp
 }
@@ -194,10 +173,14 @@ StartRust() {
 # rust+actix benchmarks
 StartJavaSpring() {
   cd ./java-spring
-   > /dev/null & server_pid=$!
+  ./mvnw deploy
+  java -jar ./target/simplerest-0.0.1-SNAPSHOT.jar > /dev/null & server_pid=$!
   cd ..
 }
 
+# Declare an array of frameworks to test. We can modify this
+# to play around with which reports are generated  and in 
+# which order
 declare -a Frameworks=(
   # "bune"
   # "denoe"
@@ -206,14 +189,14 @@ declare -a Frameworks=(
   # "nodef"
   # "neste"
   # "nestf"
-  "go"
+  # "go"
   # "cpp"
   # "rust"
-  # "javasp"
+  "javasp"
 )
-
+let order=1 
 for fw in ${Frameworks[@]}; do
-  Benchmark $fw
+  Benchmark $fw $order
   sleep $WAIT_BETWEEN_TESTS
 done
 

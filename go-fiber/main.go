@@ -11,6 +11,7 @@ type LoginDto struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
+
 type LoginResDto struct {
 	Username string `json:"username"`
 	Role     string `json:"role"`
