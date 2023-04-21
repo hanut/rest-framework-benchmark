@@ -13,15 +13,16 @@ import in.hanutsingh.simplerest.LoginResponse;
 @RestController
 @RequestMapping("/")
 public class SimplerestController {
-	
+
 	@PostMapping("/")
-	public Mono<LoginResponse> saveOneInvoice(@RequestBody final LoginRequest credentials){
-		if (!credentials.getEmail().equals("hanutsingh@gmail.com") || credentials.getPassword().equals("qweasd@123") ) {
+	public Mono<LoginResponse> saveOneInvoice(@RequestBody final LoginRequest credentials) {
+		System.out.println(credentials);
+		if (!credentials.getEmail().equals("hanutsingh@gmail.com") || !credentials.getPassword().equals("qweasd@123")) {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
 		}
-    LoginResponse resData = new LoginResponse();
-    resData.setUsername("hanut");
-    resData.setRole("super admin");
+		LoginResponse resData = new LoginResponse();
+		resData.setUsername("hanut");
+		resData.setRole("super admin");
 		return Mono.just(resData);
 	}
 
